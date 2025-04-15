@@ -23,8 +23,10 @@ function randomLetter(prev = null) {
   if (prev && letterFrequency[prev]) {
     const freqs = letterFrequency[prev];
     const r = Math.floor(Math.random() * letterSum[prev]);
+    currentProb = 0;
     for (let i = 0; i < freqs.length; i++) {
-      if (r < freqs[i]) return letters[i];
+      currentProb += freqs[i];
+      if (r < currentProb) return letters[i];
     }
   }
   return letters[Math.floor(Math.random() * letters.length)];
@@ -39,9 +41,8 @@ function drawGrid() {
     for (let x = 0; x < COLS; x++) {
       ctx.strokeStyle = x < 4 ? "#666" : "#ccc";
       ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-
       if (grid[y][x]) {
-        const color = validWord ? "green" : "red";
+        const color = validWord ? "green" : "darkgray";
         drawBlock(x, y, grid[y][x], color);
       } else if (x >= 4) {
         ctx.fillStyle = "#f5f5f5";
@@ -57,7 +58,7 @@ function drawGrid() {
   }
 
   if (activeBlock) {
-    drawBlock(activeBlock.x, activeBlock.y, activeBlock.letter, "darkred");
+    drawBlock(activeBlock.x, activeBlock.y, activeBlock.letter, "gold");
   }
 
   if (gameOver) {
@@ -81,7 +82,7 @@ function drawBlock(x, y, letter, color) {
   ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
   ctx.strokeStyle = "#000";
   ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-  ctx.fillStyle = "white";
+  ctx.fillStyle = "black";
   ctx.font = "20px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -169,12 +170,14 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && activeBlock) {
     const row = activeBlock.y;
     let rowScore = 0;
+    let rowLen;
     let word = "";
     for (let x = 0; x < COLS; x++) {
       const letter = grid[row][x];
       if (letter) {
         word += letter;
         rowScore += letterScore[letter];
+        rowLen += 1;
         if (x >= 4) rowScore += x - 3; // bonus
       }
     }
@@ -198,7 +201,7 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowUp") newY--;
   else if (e.key === "ArrowDown") newY++;
   else if (e.key === "ArrowRight") {
-    totalScore -= letterScore[activeBlock.letter]
+    totalScore -= 1;
     activeBlock = null;
     checkGameOver();
     if (!gameOver) spawnNewBlock();
